@@ -16,7 +16,8 @@ import com.telefonica.kafka_headers_exchange.processor.AnyHeaderFilter;
 import com.telefonica.kafka_headers_exchange.processor.FilterProcessor;
 import com.telefonica.kafka_headers_exchange.processor.FilterStr;
 import com.telefonica.kafka_headers_exchange.serde.EventSerde;
-import com.telefonica.weblogic_kafka_integration.model.Event;
+
+import com.telefonica.schemas.EventSchema;
 
 import java.util.HashMap;
 import java.util.List;
@@ -60,11 +61,10 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KStream<String, Event> kStream(StreamsBuilder builder) {
-        KStream<String, Event> stream = builder.stream(source,
-             Consumed.with(Serdes.String(), new EventSerde()));
-
-             
+    public KStream<String, EventSchema> kStream(StreamsBuilder builder) {
+        KStream<String, EventSchema> stream = builder.stream(source,
+            Consumed.with(Serdes.String(), new EventSerde()));
+                    
         stream.process(() -> new FilterProcessor(topicMatching, filterKeys, filterValues, getFilterStr(filterType)))
                 .to(topicMatching, Produced.with(Serdes.String(), new EventSerde()));
 

@@ -7,13 +7,13 @@ import org.apache.kafka.streams.processor.api.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.telefonica.weblogic_kafka_integration.model.Event;
+import com.telefonica.schemas.EventSchema;
 
-public class FilterProcessor implements Processor<String, Event, String, Event> {
+public class FilterProcessor implements Processor<String, EventSchema, String, EventSchema> {
 
     private static final Logger logger = LoggerFactory.getLogger(FilterProcessor.class);
 
-    private ProcessorContext<String, Event> context;
+    private ProcessorContext<String, EventSchema> context;
 
     private List<String> filterKeys;
     
@@ -39,12 +39,12 @@ public class FilterProcessor implements Processor<String, Event, String, Event> 
     }
 
     @Override
-    public void init(ProcessorContext<String, Event>  context) {
+    public void init(ProcessorContext<String, EventSchema> context) {
         this.context = context;
     }
     
     @Override
-    public void process(Record<String, Event> record) {
+    public void process(Record<String, EventSchema> record) {
         boolean match = filter.applyFilter(filterKeys, filterValues, record.headers());
 
         if(applyNot?!match:match) {

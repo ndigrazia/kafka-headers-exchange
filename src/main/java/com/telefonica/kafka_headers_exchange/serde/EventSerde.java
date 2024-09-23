@@ -4,12 +4,12 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
-import com.telefonica.weblogic_kafka_integration.model.Event;
+import com.telefonica.schemas.EventSchema;
 
-public class EventSerde extends Serdes.WrapperSerde<Event> {
+public class EventSerde extends Serdes.WrapperSerde<EventSchema> {
 
     public EventSerde() {
-        super(new JsonSerializer<>(), new JsonDeserializer<>(Event.class));
+        super(new JsonSerializer<>(), new JsonDeserializer<>(EventSchema.class));
     }
     
 }
