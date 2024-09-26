@@ -6,9 +6,9 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import com.telefonica.schemas.EventSchema;
 
-public class EventSerde extends Serdes.WrapperSerde<EventSchema> {
+public class EventSchemaSerde extends Serdes.WrapperSerde<EventSchema> {
 
-    public EventSerde() {
+    public EventSchemaSerde() {
         super(new JsonSerializer<>(), new JsonDeserializer<>(EventSchema.class));
     }
     

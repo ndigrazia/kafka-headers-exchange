@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import com.telefonica.kafka_headers_exchange.filter.AllHeaderBasedFilter;
 import com.telefonica.kafka_headers_exchange.filter.AnyHeaderBasedFilter;
 import com.telefonica.kafka_headers_exchange.filter.FilterStr;
-import com.telefonica.kafka_headers_exchange.serde.EventSerde;
+import com.telefonica.kafka_headers_exchange.serde.EventSchemaSerde;
 
 import com.telefonica.schemas.EventSchema;
 
@@ -67,9 +67,9 @@ public class KafkaConfig {
   @Bean
   public KStream<String, EventSchema> kStream(StreamsBuilder builder) {
     final KStream<String, EventSchema> sourceStream = builder.stream(source,
-        Consumed.with(Serdes.String(), new EventSerde()));
+        Consumed.with(Serdes.String(), new EventSchemaSerde()));
 
-    sourceStream.to(topicNameExtractor(), Produced.with(Serdes.String(), new EventSerde()));
+    sourceStream.to(topicNameExtractor(), Produced.with(Serdes.String(), new EventSchemaSerde()));
 
     return sourceStream;
   }
