@@ -14,8 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.telefonica.kafka_headers_exchange.filter.AllHeaderFilter;
-import com.telefonica.kafka_headers_exchange.filter.AnyHeaderFilter;
+import com.telefonica.kafka_headers_exchange.filter.AllHeaderBasedFilter;
+import com.telefonica.kafka_headers_exchange.filter.AnyHeaderBasedFilter;
 import com.telefonica.kafka_headers_exchange.filter.FilterStr;
 import com.telefonica.kafka_headers_exchange.serde.EventSerde;
 
@@ -100,9 +100,9 @@ public class KafkaConfig {
   @Bean
   public FilterStr filter() {
     if ("all".equalsIgnoreCase(filterType)) {
-        return new AllHeaderFilter();
+        return new AllHeaderBasedFilter();
     } else if ("any".equalsIgnoreCase(filterType)) {
-        return new AnyHeaderFilter();
+        return new AnyHeaderBasedFilter();
     }
     
     throw new IllegalArgumentException("Invalid filter type: " + filterType);

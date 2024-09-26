@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @ConditionalOnProperty(name = "spring.kafka.header.filter.match", havingValue = "any")
-public class AnyHeaderFilter implements FilterStr {
+public class AnyHeaderBasedFilter implements FilterStr {
 
     @Override
     public boolean applyFilter(List<String> filterKeys, List<String> filterValues, Headers headers) {
