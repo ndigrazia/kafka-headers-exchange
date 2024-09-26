@@ -1,4 +1,4 @@
-package com.telefonica.kafka_headers_exchange.processor;
+package com.telefonica.kafka_headers_exchange.filter;
 
 import java.util.List;
 import java.util.Spliterator;
@@ -6,7 +6,11 @@ import java.util.Spliterators;
 import java.util.stream.StreamSupport;
 
 import org.apache.kafka.common.header.Headers;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
 
+@Service
+@ConditionalOnProperty(name = "spring.kafka.header.filter.match", havingValue = "all")
 public class AllHeaderFilter implements FilterStr {
 
     @Override

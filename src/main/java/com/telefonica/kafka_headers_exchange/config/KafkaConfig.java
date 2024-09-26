@@ -5,16 +5,18 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Produced;
+import org.apache.kafka.streams.processor.TopicNameExtractor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.kafka.common.serialization.Serdes;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.telefonica.kafka_headers_exchange.processor.AllHeaderFilter;
-import com.telefonica.kafka_headers_exchange.processor.AnyHeaderFilter;
-import com.telefonica.kafka_headers_exchange.processor.FilterProcessor;
-import com.telefonica.kafka_headers_exchange.processor.FilterStr;
+import com.telefonica.kafka_headers_exchange.filter.AllHeaderFilter;
+import com.telefonica.kafka_headers_exchange.filter.AnyHeaderFilter;
+import com.telefonica.kafka_headers_exchange.filter.FilterStr;
 import com.telefonica.kafka_headers_exchange.serde.EventSerde;
 
 import com.telefonica.schemas.EventSchema;
@@ -26,61 +28,85 @@ import java.util.Map;
 @Configuration
 public class KafkaConfig {
 
-    @Value(value = "${spring.kafka.header.filter.keys}")
-    private List<String> filterKeys;
-    
-    @Value(value = "${spring.kafka.header.filter.values}")
-    private List<String> filterValues;
+  private static final Logger logger = LoggerFactory.getLogger(KafkaConfig.class);
 
-    @Value(value = "${spring.kafka.header.filter.match}")
-    private String filterType;
+  @Value(value = "${spring.kafka.header.filter.keys}")
+  private List<String> filterKeys;
+  
+  @Value(value = "${spring.kafka.header.filter.values}")
+  private List<String> filterValues;
 
-    @Value("${spring.kafka.bootstrap-servers}")
-    private String bootstrapServers;
+  @Value("${spring.kafka.bootstrap-servers}")
+  private String bootstrapServers;
 
-    @Value("${spring.kafka.topic.source}")
-    private String source;
+  @Value("${spring.kafka.topic.source}")
+  private String source;
 
-    @Value("${spring.kafka.topic.matching}")
-    private String topicMatching;
+  @Value("${spring.kafka.topic.matching}")
+  private String topicMatching;
 
-    @Value("${spring.kafka.topic.non-matching}")
-    private String topicNonMatching;
+  @Value("${spring.kafka.topic.non-matching}")
+  private String topicNonMatching;
 
-    @Value("${spring.application.name}")
-    private String appName;
+  @Value("${spring.application.name}")
+  private String appName;
 
-    @Bean
-    public StreamsConfig kStreamsConfigs() {
-        Map<String, Object> props = new HashMap<>();
+  @Value(value = "${spring.kafka.header.filter.match}")
+  private String filterType;
 
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, appName);
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+  @Bean
+  public StreamsConfig kStreamsConfigs() {
+      Map<String, Object> props = new HashMap<>();
 
-        return new StreamsConfig(props);
-    }
+      props.put(StreamsConfig.APPLICATION_ID_CONFIG, appName);
+      props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
-    @Bean
-    public KStream<String, EventSchema> kStream(StreamsBuilder builder) {
-        KStream<String, EventSchema> stream = builder.stream(source,
-            Consumed.with(Serdes.String(), new EventSerde()));
-                    
-        stream.process(() -> new FilterProcessor(topicMatching, filterKeys, filterValues, getFilterStr(filterType)))
-                .to(topicMatching, Produced.with(Serdes.String(), new EventSerde()));
+      return new StreamsConfig(props);
+  }
 
-        stream.process(() -> new FilterProcessor(topicNonMatching, filterKeys, filterValues, getFilterStr(filterType), true))
-                .to(topicNonMatching, Produced.with(Serdes.String(), new EventSerde()));
+  @Bean
+  public KStream<String, EventSchema> kStream(StreamsBuilder builder) {
+    final KStream<String, EventSchema> sourceStream = builder.stream(source,
+        Consumed.with(Serdes.String(), new EventSerde()));
+
+    sourceStream.to(topicNameExtractor(), Produced.with(Serdes.String(), new EventSerde()));
+
+    return sourceStream;
+  }
+
+  @Bean
+  public TopicNameExtractor<String, EventSchema> topicNameExtractor() {
+    final TopicNameExtractor<String, EventSchema> topicNameExtractor = (key, value, record) -> {
+        final boolean result = filter().applyFilter(filterKeys, filterValues, record.headers());
+
+        final String topic;
+
+        if(result) {
+            topic = topicMatching;
+        }
+        else {
+          topic = topicNonMatching;
+        }
+               
+        logger.info("MATCHING [{}], Forwarding record with key: {}, value: {} to Topic: {}.",
+            result, key, value, topic);
         
-        return stream;
+        return topic;
+    };
+
+    return topicNameExtractor;
+  }
+
+  @Bean
+  public FilterStr filter() {
+    if ("all".equalsIgnoreCase(filterType)) {
+        return new AllHeaderFilter();
+    } else if ("any".equalsIgnoreCase(filterType)) {
+        return new AnyHeaderFilter();
     }
     
-    @Bean
-    public FilterStr getFilterStr(String type) {
-        if (type.equalsIgnoreCase("all"))
-            return new AllHeaderFilter();
-
-       return new AnyHeaderFilter();
-    }
-
+    throw new IllegalArgumentException("Invalid filter type: " + filterType);
+  }
+ 
 }
 

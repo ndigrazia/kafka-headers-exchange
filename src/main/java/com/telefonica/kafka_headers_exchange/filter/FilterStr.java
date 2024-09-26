@@ -1,4 +1,4 @@
-package com.telefonica.kafka_headers_exchange.processor;
+package com.telefonica.kafka_headers_exchange.filter;
 
 import java.util.List;
 
