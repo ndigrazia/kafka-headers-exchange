@@ -48,8 +48,8 @@ public class KafkaConfig {
   @Value("${spring.kafka.topic.non-matching}")
   private String topicNonMatching;
 
-  @Value("${spring.application.name}")
-  private String appName;
+  @Value("${spring.kafka.consumer.group-id}")
+  private String groupID;
 
   @Value(value = "${spring.kafka.header.filter.match}")
   private String filterType;
@@ -58,7 +58,7 @@ public class KafkaConfig {
   public StreamsConfig kStreamsConfigs() {
       Map<String, Object> props = new HashMap<>();
 
-      props.put(StreamsConfig.APPLICATION_ID_CONFIG, appName);
+      props.put(StreamsConfig.APPLICATION_ID_CONFIG, groupID);
       props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
       return new StreamsConfig(props);
